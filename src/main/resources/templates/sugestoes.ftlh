@@ -7,6 +7,9 @@
 <body>
     <#include "cabecalho.ftlh">
     <h2>Sugestões recebidas</h2>
+    <#if enviada?? && enviada>
+        <p role="status">Sua sugestão de leitura foi enviada com sucesso!</p>
+    </#if>
     <#if sugestoes?size == 0>
         <p>Nenhuma sugestão recebida no momento.</p>
     <#else>

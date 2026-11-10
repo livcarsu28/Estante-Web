@@ -67,4 +67,33 @@ class FreeMarkerTemplatesTests {
         assertFalse(html.contains("<script>"));
         assertTrue(html.contains("<header>"));
     }
+    @Test
+    void formulariosAbremSemDadosEPreservamCamposComEscape() throws Exception {
+        String contato = renderizar("contato.ftlh", Map.of());
+        assertTrue(contato.contains("value=\"\""));
+        assertFalse(contato.contains("role=\"alert\""));
+        assertTrue(contato.contains("<header>"));
+        String invalido = renderizar("contato.ftlh", Map.of("erro", "Mensagem obrigatória",
+                "nome", "Ana <teste>", "mensagem", "   "));
+        assertTrue(invalido.contains("Mensagem obrigatória"));
+        assertTrue(invalido.contains("value=\"Ana &lt;teste&gt;\""));
+        assertTrue(invalido.contains(">   </textarea>"));
+        String sugestao = renderizar("sugestao-nova.ftlh", Map.of());
+        assertFalse(sugestao.contains("role=\"alert\""));
+        String erro = renderizar("sugestao-nova.ftlh", Map.of("erro", "Preencha os campos",
+                "nomeCliente", "Ana", "livroSugerido", "<b>Livro</b>"));
+        assertTrue(erro.contains("Preencha os campos"));
+        assertTrue(erro.contains("value=\"Ana\""));
+        assertTrue(erro.contains("&lt;b&gt;Livro&lt;/b&gt;"));
+    }
+
+    @Test
+    void avisoDeSucessoDependeDoParametro() throws Exception {
+        assertTrue(renderizar("sugestoes.ftlh", Map.of("sugestoes", List.of(), "enviada", true))
+                .contains("enviada com sucesso!"));
+        assertFalse(renderizar("sugestoes.ftlh", Map.of("sugestoes", List.of(), "enviada", false))
+                .contains("enviada com sucesso!"));
+        assertFalse(renderizar("sugestoes.ftlh", Map.of("sugestoes", List.of()))
+                .contains("enviada com sucesso!"));
+    }
 }

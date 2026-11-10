@@ -64,41 +64,55 @@ class ComunicacaoHttpTests {
     }
 
     @Test
-    void contatoAceitaPostERejeitaMensagemEmBranco() throws Exception {
+    void contatoInvalidoPreservaNomeESucessoRedireciona() throws Exception {
         var formulario = enviar(pedido("/contato").GET());
         assertEquals(200, formulario.statusCode());
-        assertTrue(formulario.headers().firstValue("Content-Type").orElseThrow().startsWith("text/html"));
         assertTrue(formulario.body().contains("method=\"post\" action=\"/contato\""));
-        var ok = enviar(pedido("/contato").header("Content-Type", "application/x-www-form-urlencoded")
-            .POST(HttpRequest.BodyPublishers.ofString("nome=Ana&mensagem=" + codificar("Olá, EstanteWeb!"))));
-        assertEquals(200, ok.statusCode());
-        assertTrue(ok.body().contains("Obrigado, Ana!"));
+        assertTrue(formulario.body().contains("value=\"\""));
         var vazio = enviar(pedido("/contato").header("Content-Type", "application/x-www-form-urlencoded")
             .POST(HttpRequest.BodyPublishers.ofString("nome=Ana&mensagem=+++")));
-        assertEquals(400, vazio.statusCode());
-        assertEquals(400, enviar(pedido("/contato").header("Content-Type", "application/x-www-form-urlencoded")
-            .POST(HttpRequest.BodyPublishers.ofString("nome=Ana"))).statusCode());
+        assertEquals(200, vazio.statusCode());
+        assertTrue(vazio.body().contains("A mensagem não pode estar em branco."));
+        assertTrue(vazio.body().contains("value=\"Ana\""));
+        var ok = enviar(pedido("/contato").header("Content-Type", "application/x-www-form-urlencoded")
+            .POST(HttpRequest.BodyPublishers.ofString("nome=Ana&mensagem=" + codificar("Olá!"))));
+        assertEquals(302, ok.statusCode());
+        assertEquals("/contato/sucesso", ok.headers().firstValue("Location").orElseThrow());
+        var sucesso = enviar(pedido("/contato/sucesso").GET());
+        assertEquals(200, sucesso.statusCode());
+        assertTrue(sucesso.body().contains("Sua mensagem foi recebida."));
+        assertEquals(200, enviar(pedido("/contato/sucesso").GET()).statusCode());
     }
 
     @Test
-    void sugestoesAcumulamCom201ECabecalhoESaoEscapadasNoHtml() throws Exception {
-        var formulario = enviar(pedido("/sugestoes/nova").GET());
-        assertTrue(formulario.body().contains("method=\"post\" action=\"/sugestoes\""));
-        int anterior = 0;
-        for (String titulo : new String[]{"Livro Um", "Livro Dois", "<script>alert(1)</script>"}) {
+    void sugestoesInvalidasPreservamCamposENaoSaoSalvas() throws Exception {
+        String antes = enviar(pedido("/sugestoes").GET()).body();
+        String[][] casos = {{"   ", "Livro a corrigir"}, {"Nome preservado", "   "}};
+        for (String[] caso : casos) {
             var r = enviar(pedido("/sugestoes").header("Content-Type", "application/x-www-form-urlencoded")
-                .POST(HttpRequest.BodyPublishers.ofString("nomeCliente=Ana&livroSugerido=" + codificar(titulo))));
-            assertEquals(201, r.statusCode());
-            int total = Integer.parseInt(r.headers().firstValue("X-Total-Sugestoes").orElseThrow());
-            assertTrue(total > anterior);
-            anterior = total;
+                .POST(HttpRequest.BodyPublishers.ofString("nomeCliente=" + codificar(caso[0])
+                    + "&livroSugerido=" + codificar(caso[1]))));
+            assertEquals(200, r.statusCode());
+            assertTrue(r.body().contains("Preencha seu nome e o livro sugerido."));
+            assertTrue(r.body().contains("value=\"" + caso[0] + "\""));
+            assertTrue(r.body().contains("value=\"" + caso[1] + "\""));
         }
-        var lista = enviar(pedido("/sugestoes").GET());
+        assertEquals(antes, enviar(pedido("/sugestoes").GET()).body());
+    }
+
+    @Test
+    void sugestaoValidaRedirecionaComFlagEGetNaoDuplica() throws Exception {
+        String livro = "Livro de teste " + java.util.UUID.randomUUID();
+        var r = enviar(pedido("/sugestoes").header("Content-Type", "application/x-www-form-urlencoded")
+            .POST(HttpRequest.BodyPublishers.ofString("nomeCliente=Ana&livroSugerido=" + codificar(livro))));
+        assertEquals(302, r.statusCode());
+        assertEquals("/sugestoes?enviada=true", r.headers().firstValue("Location").orElseThrow());
+        var lista = enviar(pedido("/sugestoes?enviada=true").GET());
         assertEquals(200, lista.statusCode());
-        assertTrue(lista.body().contains("Livro Um"));
-        assertTrue(lista.body().contains("Livro Dois"));
-        assertTrue(lista.body().contains("&lt;script&gt;"));
-        assertFalse(lista.body().contains("<script>"));
-        assertEquals(0, new SugestaoRepository().contarSugestoes());
+        assertTrue(lista.body().contains("Sua sugestão de leitura foi enviada com sucesso!"));
+        assertTrue(lista.body().contains(livro));
+        assertEquals(lista.body(), enviar(pedido("/sugestoes?enviada=true").GET()).body());
+        assertFalse(enviar(pedido("/sugestoes").GET()).body().contains("enviada com sucesso!"));
+        assertFalse(enviar(pedido("/sugestoes?enviada=false").GET()).body().contains("enviada com sucesso!"));
     }
 }
