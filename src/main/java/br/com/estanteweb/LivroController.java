@@ -1,5 +1,11 @@
 package br.com.estanteweb;
 
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -9,9 +15,13 @@ public class LivroController {
 
     @GetMapping(value = "/livros", produces = "text/plain;charset=UTF-8")
     public String listar() {
+        return formatarAcervo(repository.listarTodos());
+    }
+
+    private String formatarAcervo(List<Livro> livros) {
         StringBuilder resposta = new StringBuilder("Acervo EstanteWeb: ");
         boolean primeiro = true;
-        for (Livro livro : repository.listarTodos()) {
+        for (Livro livro : livros) {
             if (!primeiro) {
                 resposta.append(" | ");
             }
@@ -21,6 +31,25 @@ public class LivroController {
             primeiro = false;
         }
         return resposta.toString();
+    }
+
+    @GetMapping(value = "/livros/busca", produces = "text/plain;charset=UTF-8")
+    public ResponseEntity<String> buscar(
+            @RequestParam(name = "precoMaximo", defaultValue = "999") double precoMaximo) {
+        List<Livro> encontrados = repository.listarAtePreco(precoMaximo);
+        if (encontrados.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Nenhum livro encontrado até o preço de R$ " + precoMaximo + ".");
+        }
+        return ResponseEntity.ok()
+                .header("X-Total-Encontrados", Integer.toString(encontrados.size()))
+                .body(formatarAcervo(encontrados));
+    }
+
+    @GetMapping(value = "/livros/quem-acessa", produces = "text/plain;charset=UTF-8")
+    public String quemAcessa(
+            @RequestHeader(value = "User-Agent", defaultValue = "Desconhecido") String userAgent) {
+        return "Você está acessando a partir de: " + userAgent;
     }
 
     @GetMapping(value = "/livros/total", produces = "text/plain;charset=UTF-8")

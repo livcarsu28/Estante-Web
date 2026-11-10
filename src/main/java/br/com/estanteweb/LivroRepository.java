@@ -1,6 +1,7 @@
 package br.com.estanteweb;
 
 import java.util.List;
+import java.util.ArrayList;
 
 public class LivroRepository {
     private final List<Livro> livros = List.of(
@@ -15,6 +16,16 @@ public class LivroRepository {
 
     public List<Livro> listarTodos() {
         return livros;
+    }
+
+    public List<Livro> listarAtePreco(double precoMaximo) {
+        List<Livro> encontrados = new ArrayList<>();
+        for (Livro livro : livros) {
+            if (livro.getPreco() <= precoMaximo) {
+                encontrados.add(livro);
+            }
+        }
+        return encontrados;
     }
 
     public int contarLivros() {
