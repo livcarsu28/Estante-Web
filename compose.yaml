@@ -1,0 +1,20 @@
+services:
+  mysql:
+    image: mysql:8
+    container_name: estanteweb-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD:?Defina DB_PASSWORD no ambiente antes de subir o MySQL}"
+      MYSQL_DATABASE: estanteweb
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-dados:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "--silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+volumes:
+  mysql-dados:
