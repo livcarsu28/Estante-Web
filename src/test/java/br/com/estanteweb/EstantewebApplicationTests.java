@@ -55,7 +55,28 @@ class EstantewebApplicationTests {
         assertTrue(html.headers().firstValue("Content-Type").orElseThrow().startsWith("text/html"));
         assertTrue(texto.body().contains("O <b>Grande</b> Gatsby"));
         assertTrue(html.body().contains("<ul>"));
-        assertTrue(html.body().contains("<li>O <b>Grande</b> Gatsby, de F. Scott Fitzgerald"));
+        assertTrue(html.body().contains("<li>O &lt;b&gt;Grande&lt;/b&gt; Gatsby, de F. Scott Fitzgerald"));
+        assertFalse(html.body().contains("<b>Grande</b>"));
         assertEquals(6, html.body().split("<li>", -1).length - 1);
+    }
+    @Test
+    void olaRenderizaVariaveisEAnoSemSeparador() throws Exception {
+        HttpResponse<String> resposta = get("/ola");
+        assertEquals(200, resposta.statusCode());
+        assertTrue(resposta.body().contains("Bem-vindo à EstanteWeb!"));
+        assertTrue(resposta.body().contains("desde 1998"));
+        assertFalse(resposta.body().contains("1,998"));
+        assertFalse(resposta.body().contains("${nomeLoja}"));
+    }
+
+    @Test
+    void listagensIncluemCabecalhoCompartilhado() throws Exception {
+        for (String rota : new String[]{"/livros/html", "/sugestoes"}) {
+            HttpResponse<String> resposta = get(rota);
+            assertEquals(200, resposta.statusCode());
+            assertTrue(resposta.body().contains("<header>"));
+            assertTrue(resposta.body().contains("<h1>EstanteWeb</h1>"));
+            assertTrue(resposta.body().contains("href=\"/\""));
+        }
     }
 }

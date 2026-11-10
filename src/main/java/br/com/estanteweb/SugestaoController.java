@@ -5,14 +5,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.util.HtmlUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-@RestController
+@Controller
 public class SugestaoController {
     private final SugestaoRepository repository = new SugestaoRepository();
 
     @GetMapping(value = "/sugestoes/nova", produces = "text/html;charset=UTF-8")
+    @ResponseBody
     public String nova() {
         return """
                 <!DOCTYPE html>
@@ -40,20 +42,9 @@ public class SugestaoController {
                 .body("Obrigado, " + nomeCliente + "! Sua sugestão de leitura foi recebida: " + livroSugerido);
     }
 
-    @GetMapping(value = "/sugestoes", produces = "text/html;charset=UTF-8")
-    public String listar() {
-        StringBuilder html = new StringBuilder("""
-                <!DOCTYPE html><html lang="pt-BR">
-                <head><meta charset="UTF-8"><title>Sugestões | EstanteWeb</title></head>
-                <body><h1>Sugestões recebidas</h1><ul>
-                """);
-        for (Sugestao sugestao : repository.listarTodas()) {
-            // Dados enviados por visitantes são exibidos como texto, sem executar tags.
-            html.append("<li>").append(HtmlUtils.htmlEscape(sugestao.getLivroSugerido()))
-                    .append(" - sugerido por ").append(HtmlUtils.htmlEscape(sugestao.getNomeCliente()))
-                    .append("</li>");
-        }
-        return html.append("</ul><p><a href='/sugestoes/nova'>Enviar uma sugestão</a></p></body></html>")
-                .toString();
+    @GetMapping("/sugestoes")
+    public String listar(Model model) {
+        model.addAttribute("sugestoes", repository.listarTodas());
+        return "sugestoes";
     }
 }

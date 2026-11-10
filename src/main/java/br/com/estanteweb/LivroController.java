@@ -7,13 +7,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-@RestController
+@Controller
 public class LivroController {
     private final LivroRepository repository = new LivroRepository();
 
     @GetMapping(value = "/livros", produces = "text/plain;charset=UTF-8")
+    @ResponseBody
     public String listar() {
         return formatarAcervo(repository.listarTodos());
     }
@@ -47,27 +50,21 @@ public class LivroController {
     }
 
     @GetMapping(value = "/livros/quem-acessa", produces = "text/plain;charset=UTF-8")
+    @ResponseBody
     public String quemAcessa(
             @RequestHeader(value = "User-Agent", defaultValue = "Desconhecido") String userAgent) {
         return "Você está acessando a partir de: " + userAgent;
     }
 
     @GetMapping(value = "/livros/total", produces = "text/plain;charset=UTF-8")
+    @ResponseBody
     public String total() {
         return "O acervo tem " + repository.contarLivros() + " livros.";
     }
 
-    @GetMapping(value = "/livros/html", produces = "text/html;charset=UTF-8")
-    public String listarHtml() {
-        StringBuilder html = new StringBuilder("<!DOCTYPE html><html lang='pt-BR'>"
-                + "<head><meta charset='UTF-8'><title>Acervo EstanteWeb</title></head>"
-                + "<body><h1>Acervo EstanteWeb</h1><ul>");
-        // Títulos fixos do repositório: a tag didática é interpretada nesta rota.
-        for (Livro livro : repository.listarTodos()) {
-            html.append("<li>").append(livro.getTitulo())
-                    .append(", de ").append(livro.getAutor())
-                    .append(" (R$ ").append(livro.getPreco()).append(")</li>");
-        }
-        return html.append("</ul></body></html>").toString();
+    @GetMapping("/livros/html")
+    public String listarHtml(Model model) {
+        model.addAttribute("livros", repository.listarTodos());
+        return "livros";
     }
 }
