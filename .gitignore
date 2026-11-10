@@ -1,0 +1,9 @@
+# Arquivos gerados e configurações locais
+target/
+*.class
+.idea/
+.vscode/
+.DS_Store
+
+# Documentação Markdown fora desta entrega
+*.md
