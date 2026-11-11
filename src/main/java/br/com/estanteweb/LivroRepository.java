@@ -1,34 +1,46 @@
 package br.com.estanteweb;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+@Repository
 public class LivroRepository {
-    private final List<Livro> livros = List.of(
-            new Livro("O Mapa da Rua Antiga", "Helena Duarte", 2001, 24.9),
-            new Livro("Cartas de uma Livraria", "Marcos Azevedo", 2010, 22.0),
-            new Livro("O Jardim das Memórias", "Clara Nogueira", 1998, 18.5),
-            new Livro("Viagem ao Último Capítulo", "Rafael Prado", 2015, 30.0),
-            new Livro("Contos da Chuva", "Lia Monteiro", 2007, 16.9),
-            // Sexto livro acrescentado na missão 4.3 para comparar texto e HTML.
-            new Livro("O <b>Grande</b> Gatsby", "F. Scott Fitzgerald", 1925, 28.0)
-    );
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     public List<Livro> listarTodos() {
+        String sql = "SELECT * FROM livro";
+        List<Map<String, Object>> linhas = jdbcTemplate.queryForList(sql);
+        List<Livro> livros = new ArrayList<>();
+        for (Map<String, Object> linha : linhas) {
+            livros.add(Livro.deMap(linha));
+        }
         return livros;
     }
 
-    public List<Livro> listarAtePreco(double precoMaximo) {
-        List<Livro> encontrados = new ArrayList<>();
-        for (Livro livro : livros) {
-            if (livro.getPreco() <= precoMaximo) {
-                encontrados.add(livro);
-            }
-        }
-        return encontrados;
+    public int contarLivros() {
+        String sql = "SELECT COUNT(*) FROM livro";
+        return jdbcTemplate.queryForObject(sql, Integer.class);
     }
 
-    public int contarLivros() {
-        return livros.size();
+    public List<Livro> listarAtePreco(double precoMaximo) {
+        String sql = "SELECT * FROM livro WHERE preco <= ?";
+        List<Map<String, Object>> linhas = jdbcTemplate.queryForList(sql, precoMaximo);
+        List<Livro> livros = new ArrayList<>();
+        for (Map<String, Object> linha : linhas) {
+            livros.add(Livro.deMap(linha));
+        }
+        return livros;
+    }
+
+    public double somarValorAcervo() {
+        String sql = "SELECT SUM(preco) FROM livro";
+        Double total = jdbcTemplate.queryForObject(sql, Double.class);
+        return total != null ? total : 0.0;
     }
 }

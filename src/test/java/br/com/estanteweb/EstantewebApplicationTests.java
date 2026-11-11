@@ -6,6 +6,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -13,6 +14,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class EstantewebApplicationTests {
+    @Autowired
+    private LivroRepository repository;
+
     @Value("${local.server.port}")
     private int port;
 
@@ -33,7 +37,6 @@ class EstantewebApplicationTests {
 
     @Test
     void totalCorrespondeAoAcervoIncluindoLivroDaMissao43() throws Exception {
-        LivroRepository repository = new LivroRepository();
         assertEquals(6, repository.listarTodos().size());
         assertEquals(repository.listarTodos().size(), repository.contarLivros());
         HttpResponse<String> acervo = get("/livros");

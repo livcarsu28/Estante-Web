@@ -2,6 +2,8 @@ package br.com.estanteweb;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -13,7 +15,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 public class LivroController {
-    private final LivroRepository repository = new LivroRepository();
+    @Autowired
+    private LivroRepository repository;
 
     @GetMapping(value = "/livros", produces = "text/plain;charset=UTF-8")
     @ResponseBody
@@ -60,6 +63,12 @@ public class LivroController {
     @ResponseBody
     public String total() {
         return "O acervo tem " + repository.contarLivros() + " livros.";
+    }
+
+    @GetMapping(value = "/livros/valor-total", produces = "text/plain;charset=UTF-8")
+    @ResponseBody
+    public String valorTotal() {
+        return "O valor total do acervo é R$ " + repository.somarValorAcervo();
     }
 
     @GetMapping("/livros/html")

@@ -48,8 +48,8 @@ class FreeMarkerTemplatesTests {
         String vazio = renderizar("livros.ftlh", Map.of("livros", List.of()));
         assertTrue(vazio.contains("Nenhum livro no acervo no momento."));
         assertFalse(vazio.contains("<li>"));
-        String html = renderizar("livros.ftlh", Map.of("livros", new LivroRepository().listarTodos()));
-        assertEquals(6, html.split("<li>", -1).length - 1);
+        String html = renderizar("livros.ftlh", Map.of("livros", List.of(Livro.deMap(Map.of("id", 1L, "titulo", "O <b>Grande</b> Gatsby", "autor", "F. Scott Fitzgerald", "ano", 1925, "preco", 28.0)))));
+        assertEquals(1, html.split("<li>", -1).length - 1);
         assertTrue(html.contains("O &lt;b&gt;Grande&lt;/b&gt; Gatsby"));
         assertFalse(html.contains("<b>Grande</b>"));
         assertTrue(html.contains("<header>"));
