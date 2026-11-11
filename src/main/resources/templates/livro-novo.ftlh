@@ -25,11 +25,11 @@
     <br><br>
 
     <label for="ano">Ano:</label>
-    <input type="text" id="ano" name="ano" value="${(ano?c)!}">
+    <input type="text" id="ano" name="ano" value="${ano!}">
     <br><br>
 
     <label for="preco">Preço:</label>
-    <input type="text" id="preco" name="preco" value="${(preco?c)!}">
+    <input type="text" id="preco" name="preco" value="${preco!}">
     <br><br>
 
     <button type="submit">Cadastrar</button>

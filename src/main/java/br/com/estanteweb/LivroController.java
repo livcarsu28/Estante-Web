@@ -86,30 +86,107 @@ public class LivroController {
 
     @PostMapping("/livros")
     public String salvarLivro(@RequestParam("titulo") String titulo,
-            @RequestParam("autor") String autor, @RequestParam("ano") int ano,
-            @RequestParam("preco") double preco, Model model) {
-        if (titulo.isBlank()) {
-            model.addAttribute("erro", "O título é obrigatório.");
-        } else if (autor.isBlank()) {
-            model.addAttribute("erro", "O autor é obrigatório.");
-        } else if (!Double.isFinite(preco) || preco <= 0) {
-            model.addAttribute("erro", "O preço deve ser maior que zero e finito.");
+            @RequestParam("autor") String autor, @RequestParam("ano") String ano,
+            @RequestParam("preco") String preco, Model model) {
+        Livro livro = validarFormulario(titulo, autor, ano, preco, model);
+        if (livro == null) {
+            return "livro-novo";
         }
-        if (model.containsAttribute("erro")) {
+        repository.salvar(livro);
+        return "redirect:/livros/html";
+    }
+
+    // Cadastro e edição usam a mesma validação. Dados retornam ao Model somente no erro.
+    private Livro validarFormulario(String titulo, String autor, String ano, String preco, Model model) {
+        String erro = null;
+        int anoNumero = 0;
+        double precoNumero = 0;
+        if (titulo.isBlank()) {
+            erro = "O título é obrigatório.";
+        } else if (autor.isBlank()) {
+            erro = "O autor é obrigatório.";
+        } else {
+            try {
+                anoNumero = Integer.parseInt(ano.trim());
+            } catch (NumberFormatException e) {
+                erro = "Informe um ano inteiro válido.";
+            }
+            if (erro == null) {
+                try {
+                    precoNumero = Double.parseDouble(preco.trim().replace(',', '.'));
+                    if (!Double.isFinite(precoNumero) || precoNumero <= 0) {
+                        erro = "O preço deve ser maior que zero.";
+                    }
+                } catch (NumberFormatException e) {
+                    erro = "Informe um preço válido.";
+                }
+            }
+        }
+        if (erro != null) {
+            model.addAttribute("erro", erro);
             model.addAttribute("titulo", titulo);
             model.addAttribute("autor", autor);
             model.addAttribute("ano", ano);
             model.addAttribute("preco", preco);
-            return "livro-novo";
+            return null;
         }
         Livro livro = new Livro();
         livro.setTitulo(titulo);
         livro.setAutor(autor);
-        livro.setAno(ano);
-        livro.setPreco(preco);
-        repository.salvar(livro);
+        livro.setAno(anoNumero);
+        livro.setPreco(precoNumero);
+        return livro;
+    }
+
+    private Livro exigirLivro(Long id) {
+        Livro livro = repository.buscarPorId(id);
+        if (livro == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        return livro;
+    }
+
+    @GetMapping("/livros/{id}/editar")
+    public String editarLivro(@PathVariable("id") Long id, Model model) {
+        Livro livro = exigirLivro(id);
+        model.addAttribute("livro", livro);
+        model.addAttribute("titulo", livro.getTitulo());
+        model.addAttribute("autor", livro.getAutor());
+        model.addAttribute("ano", Integer.toString(livro.getAno()));
+        model.addAttribute("preco", Double.toString(livro.getPreco()));
+        return "livro-editar";
+    }
+
+    @PostMapping("/livros/{id}")
+    public String salvarEdicao(@PathVariable("id") Long id,
+            @RequestParam("titulo") String titulo, @RequestParam("autor") String autor,
+            @RequestParam("ano") String ano, @RequestParam("preco") String preco, Model model) {
+        model.addAttribute("livro", exigirLivro(id));
+        Livro livro = validarFormulario(titulo, autor, ano, preco, model);
+        if (livro == null) {
+            return "livro-editar";
+        }
+        livro.setId(id);
+        if (repository.atualizar(livro) == 0 && repository.buscarPorId(id) == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        return "redirect:/livros/" + id;
+    }
+
+    @GetMapping("/livros/{id}/excluir")
+    public String confirmarExclusao(@PathVariable("id") Long id, Model model) {
+        model.addAttribute("livro", exigirLivro(id));
+        return "livro-excluir";
+    }
+
+    @PostMapping("/livros/{id}/excluir")
+    public String excluirLivro(@PathVariable("id") Long id) {
+        if (repository.excluir(id) == 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
         return "redirect:/livros/html";
     }
+
     @GetMapping("/livros/{id}")
     public String detalharLivro(@PathVariable("id") Long id, Model model) {
         Livro livro = repository.buscarPorId(id);

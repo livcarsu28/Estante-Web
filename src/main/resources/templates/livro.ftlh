@@ -12,6 +12,7 @@
         <dt>Ano</dt><dd>${livro.ano?c}</dd>
         <dt>Preço</dt><dd>R$ ${livro.preco?string["0.00"]}</dd>
     </dl>
+    <p><a href="/livros/${livro.id?c}/editar">Corrigir livro</a> | <a href="/livros/${livro.id?c}/excluir">Remover livro</a></p>
     <p><a href="/livros/html">Voltar para o acervo</a></p>
     <#if outrosLivros?has_content>
         <section>

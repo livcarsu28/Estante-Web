@@ -79,4 +79,13 @@ public class LivroRepository {
         }
         return livros;
     }
+    public int atualizar(Livro livro) {
+        String sql = "UPDATE livro SET titulo = ?, autor = ?, ano = ?, preco = ? WHERE id = ?";
+        return jdbcTemplate.update(sql, livro.getTitulo(), livro.getAutor(), livro.getAno(),
+                livro.getPreco(), livro.getId());
+    }
+
+    public int excluir(Long id) {
+        return jdbcTemplate.update("DELETE FROM livro WHERE id = ?", id);
+    }
 }

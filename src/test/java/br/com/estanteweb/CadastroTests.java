@@ -80,7 +80,7 @@ class CadastroTests {
 
     @Test
     void cadastroValidoGravaCamposEIdGeradoERedireciona() throws Exception {
-        String retorno = livroController.salvarLivro("L'Étranger", "Albert Camus", 1942, 24.9,
+        String retorno = livroController.salvarLivro("L'Étranger", "Albert Camus", "1942", "24.9",
                 new ExtendedModelMap());
         assertEquals("redirect:/livros/html", retorno);
         assertEquals(1, livros.contarLivros());
@@ -101,12 +101,12 @@ class CadastroTests {
         for (Object[] caso : casos) {
             ExtendedModelMap model = new ExtendedModelMap();
             assertEquals("livro-novo", livroController.salvarLivro((String) caso[0], (String) caso[1],
-                    1998, (Double) caso[2], model));
+                    "1998", caso[2].toString(), model));
             assertTrue(model.containsAttribute("erro"));
             assertEquals(caso[0], model.getAttribute("titulo"));
             assertEquals(caso[1], model.getAttribute("autor"));
-            assertEquals(1998, model.getAttribute("ano"));
-            assertEquals(caso[2], model.getAttribute("preco"));
+            assertEquals("1998", model.getAttribute("ano"));
+            assertEquals(caso[2].toString(), model.getAttribute("preco"));
         }
         assertEquals(0, livros.contarLivros());
     }
@@ -114,7 +114,7 @@ class CadastroTests {
     @Test
     void formularioComErroMantemNumerosValidosIndependentementeDoLocale() throws Exception {
         ExtendedModelMap model = new ExtendedModelMap();
-        livroController.salvarLivro("", "Autora <teste>", 1998, 24.9, model);
+        livroController.salvarLivro("", "Autora <teste>", "1998", "24.9", model);
         for (Locale locale : new Locale[]{Locale.US, Locale.forLanguageTag("pt-BR")}) {
             String html = renderizar("livro-novo", model.asMap(), locale);
             assertTrue(html.contains("value=\"1998\""));
