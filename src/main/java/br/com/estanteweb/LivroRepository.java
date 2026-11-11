@@ -47,4 +47,36 @@ public class LivroRepository {
         String sql = "INSERT INTO livro (titulo, autor, ano, preco) VALUES (?, ?, ?, ?)";
         jdbcTemplate.update(sql, livro.getTitulo(), livro.getAutor(), livro.getAno(), livro.getPreco());
     }
+    public Livro buscarPorId(Long id) {
+        String sql = "SELECT * FROM livro WHERE id = ?";
+        List<Map<String, Object>> linhas = jdbcTemplate.queryForList(sql, id);
+        return linhas.isEmpty() ? null : Livro.deMap(linhas.get(0));
+    }
+
+    public List<Livro> listarOrdenadoPor(String coluna) {
+        // A entrada seleciona apenas comandos SQL fixos, sem concatenação.
+        String sql = switch (coluna == null ? "" : coluna) {
+            case "titulo" -> "SELECT * FROM livro ORDER BY titulo";
+            case "autor" -> "SELECT * FROM livro ORDER BY autor";
+            case "ano" -> "SELECT * FROM livro ORDER BY ano";
+            case "preco" -> "SELECT * FROM livro ORDER BY preco";
+            default -> "SELECT * FROM livro";
+        };
+        List<Map<String, Object>> linhas = jdbcTemplate.queryForList(sql);
+        List<Livro> livros = new ArrayList<>();
+        for (Map<String, Object> linha : linhas) {
+            livros.add(Livro.deMap(linha));
+        }
+        return livros;
+    }
+
+    public List<Livro> listarDoMesmoAutor(String autor, Long idAtual) {
+        String sql = "SELECT * FROM livro WHERE autor = ? AND id <> ?";
+        List<Map<String, Object>> linhas = jdbcTemplate.queryForList(sql, autor, idAtual);
+        List<Livro> livros = new ArrayList<>();
+        for (Map<String, Object> linha : linhas) {
+            livros.add(Livro.deMap(linha));
+        }
+        return livros;
+    }
 }

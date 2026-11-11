@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -73,8 +75,8 @@ public class LivroController {
     }
 
     @GetMapping("/livros/html")
-    public String listarHtml(Model model) {
-        model.addAttribute("livros", repository.listarTodos());
+    public String listarHtml(@RequestParam(name = "ordem", required = false) String ordem, Model model) {
+        model.addAttribute("livros", repository.listarOrdenadoPor(ordem));
         return "livros";
     }
     @GetMapping("/livros/novo")
@@ -107,5 +109,15 @@ public class LivroController {
         livro.setPreco(preco);
         repository.salvar(livro);
         return "redirect:/livros/html";
+    }
+    @GetMapping("/livros/{id}")
+    public String detalharLivro(@PathVariable("id") Long id, Model model) {
+        Livro livro = repository.buscarPorId(id);
+        if (livro == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        model.addAttribute("livro", livro);
+        model.addAttribute("outrosLivros", repository.listarDoMesmoAutor(livro.getAutor(), id));
+        return "livro";
     }
 }

@@ -58,7 +58,7 @@ class EstantewebApplicationTests {
         assertTrue(html.headers().firstValue("Content-Type").orElseThrow().startsWith("text/html"));
         assertTrue(texto.body().contains("O <b>Grande</b> Gatsby"));
         assertTrue(html.body().contains("<ul>"));
-        assertTrue(html.body().contains("<li>O &lt;b&gt;Grande&lt;/b&gt; Gatsby, de F. Scott Fitzgerald"));
+        assertTrue(html.body().contains("O &lt;b&gt;Grande&lt;/b&gt; Gatsby</a>, de F. Scott Fitzgerald"));
         assertFalse(html.body().contains("<b>Grande</b>"));
         assertEquals(6, html.body().split("<li>", -1).length - 1);
     }
