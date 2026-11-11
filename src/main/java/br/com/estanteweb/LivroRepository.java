@@ -43,4 +43,8 @@ public class LivroRepository {
         Double total = jdbcTemplate.queryForObject(sql, Double.class);
         return total != null ? total : 0.0;
     }
+    public void salvar(Livro livro) {
+        String sql = "INSERT INTO livro (titulo, autor, ano, preco) VALUES (?, ?, ?, ?)";
+        jdbcTemplate.update(sql, livro.getTitulo(), livro.getAutor(), livro.getAno(), livro.getPreco());
+    }
 }

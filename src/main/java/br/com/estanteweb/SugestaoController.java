@@ -1,6 +1,7 @@
 package br.com.estanteweb;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -8,7 +9,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class SugestaoController {
-    private final SugestaoRepository repository = new SugestaoRepository();
+    @Autowired
+    private SugestaoRepository repository;
 
     @GetMapping("/sugestoes/nova")
     public String nova(Model model) {
@@ -24,7 +26,7 @@ public class SugestaoController {
             model.addAttribute("livroSugerido", livroSugerido);
             return "sugestao-nova";
         }
-        repository.adicionar(new Sugestao(nomeCliente, livroSugerido));
+        repository.salvar(new Sugestao(nomeCliente, livroSugerido));
         return "redirect:/sugestoes?enviada=true";
     }
 

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
@@ -75,5 +76,36 @@ public class LivroController {
     public String listarHtml(Model model) {
         model.addAttribute("livros", repository.listarTodos());
         return "livros";
+    }
+    @GetMapping("/livros/novo")
+    public String novoLivro() {
+        return "livro-novo";
+    }
+
+    @PostMapping("/livros")
+    public String salvarLivro(@RequestParam("titulo") String titulo,
+            @RequestParam("autor") String autor, @RequestParam("ano") int ano,
+            @RequestParam("preco") double preco, Model model) {
+        if (titulo.isBlank()) {
+            model.addAttribute("erro", "O título é obrigatório.");
+        } else if (autor.isBlank()) {
+            model.addAttribute("erro", "O autor é obrigatório.");
+        } else if (!Double.isFinite(preco) || preco <= 0) {
+            model.addAttribute("erro", "O preço deve ser maior que zero e finito.");
+        }
+        if (model.containsAttribute("erro")) {
+            model.addAttribute("titulo", titulo);
+            model.addAttribute("autor", autor);
+            model.addAttribute("ano", ano);
+            model.addAttribute("preco", preco);
+            return "livro-novo";
+        }
+        Livro livro = new Livro();
+        livro.setTitulo(titulo);
+        livro.setAutor(autor);
+        livro.setAno(ano);
+        livro.setPreco(preco);
+        repository.salvar(livro);
+        return "redirect:/livros/html";
     }
 }

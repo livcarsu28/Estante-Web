@@ -7,6 +7,7 @@
 <body>
     <#include "cabecalho.ftlh">
     <h2>Acervo EstanteWeb</h2>
+    <p><a href="/livros/novo">Cadastrar livro</a></p>
     <#if livros?size == 0>
         <p>Nenhum livro no acervo no momento.</p>
     <#else>
